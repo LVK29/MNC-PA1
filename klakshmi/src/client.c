@@ -39,30 +39,31 @@ int connect_to_host_old(char *server_ip, char *server_port);
 int connect_to_host(char *server_ip, int server_port);
 void clientListener(char **argv);
 
-void getIP(){
-    char hostbuffer[256]; 
-    char *IPbuffer; 
-    struct hostent *host_entry; 
-    int hostname; 
-  
-    // To retrieve hostname 
-    hostname = gethostname(hostbuffer, sizeof(hostbuffer)); 
-    
-    // To retrieve host information 
-    host_entry = gethostbyname(hostbuffer); 
-     // To convert an Internet network 
-    // address into ASCII string 
-    IPbuffer = inet_ntoa(*((struct in_addr*) 
-                           host_entry->h_addr_list[0])); 
-  
-    printf("Hostname: %s\n", hostbuffer); 
-    printf("Host IP: %s\n", IPbuffer); 
+void getIP()
+{
+	char hostbuffer[256];
+	char *IPbuffer;
+	struct hostent *host_entry;
+	int hostname;
+
+	// To retrieve hostname
+	hostname = gethostname(hostbuffer, sizeof(hostbuffer));
+
+	// To retrieve host information
+	host_entry = gethostbyname(hostbuffer);
+	// To convert an Internet network
+	// address into ASCII string
+	IPbuffer = inet_ntoa(*((struct in_addr *)
+							   host_entry->h_addr_list[0]));
+
+	printf("Hostname: %s\n", hostbuffer);
+	printf("Host IP: %s\n", IPbuffer);
 }
 void clientListener(char **argv)
 {
 	while (!logged_in)
 	{
-		char *firstWord,*context;
+		char *firstWord, *context;
 		char *cmd = (char *)malloc(sizeof(char) * CMD_SIZE);
 
 		memset(cmd, '\0', CMD_SIZE);
@@ -77,23 +78,26 @@ void clientListener(char **argv)
 			server = connect_to_host_old(argv[1], argv[2]);
 			// check if login fails then dont swtich loggedin to 1
 			logged_in = 1;
-		//	printf("LOGGED IN : %d\n", logged_in);
+			//	printf("LOGGED IN : %d\n", logged_in);
 		}
-		else if (strstr(key, "AUTHOR"))
+		else if ((strcmp(cmd, "AUTHOR")==0)||(strcmp(cmd, "AUTHOR\n")==0))
 		{
+			printf("[%s:SUCCESS]\n", cmd);
 			char your_ubit_name[] = "dunjiong";
 			printf("I, %s, have read and understood the course academic integrity policy.\n", your_ubit_name);
+			printf("[%s:SUCCESS]\n", cmd);
 		}
 
 		else if (strstr(key, "PORT"))
 		{
 			int port = *argv[1];
-			printf("[%s:SUCCESS]\n", cmd);
+			//printf("[%s:SUCCESS]\nPORT:%d\n[%s:END]\n",key,port,cmd);
+			printf("[%s:SUCCESS]",key);
 			printf("PORT:%d\n", port);
 			printf("[%s:END]\n", cmd);
 		}
 
-		else if (strstr(key, "IP"))
+		else if ((strcmp(key, "IP")==0)||(strcmp(key, "IP\n")==0))
 		{
 			printf("[%s:SUCCESS]\n", cmd);
 			getIP();
@@ -167,7 +171,6 @@ int main(int argc, char **argv)
 			clientListener(argv);
 		}
 	}
-		
 }
 
 int connect_to_host_old(char *server_ip, char *server_port)
