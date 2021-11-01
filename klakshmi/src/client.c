@@ -80,7 +80,7 @@ void clientListener(char **argv)
 			logged_in = 1;
 			//	printf("LOGGED IN : %d\n", logged_in);
 		}
-		else if ((strcmp(cmd, "AUTHOR")==0)||(strcmp(cmd, "AUTHOR\n")==0))
+		else if (strstr(key, "AUTHOR"))
 		{
 			printf("[%s:SUCCESS]\n", cmd);
 			char your_ubit_name[] = "dunjiong";
@@ -91,13 +91,13 @@ void clientListener(char **argv)
 		else if (strstr(key, "PORT"))
 		{
 			int port = *argv[1];
-			//printf("[%s:SUCCESS]\nPORT:%d\n[%s:END]\n",key,port,cmd);
-			printf("[%s:SUCCESS]",key);
+			printf("[%s:SUCCESS]\nPORT:%d\n[%s:END]\n",key,port,cmd);
+			printf("[%s:SUCCESS]\n",cmd);
 			printf("PORT:%d\n", port);
 			printf("[%s:END]\n", cmd);
 		}
 
-		else if ((strcmp(key, "IP")==0)||(strcmp(key, "IP\n")==0))
+		else if (strstr(key, "IP"))
 		{
 			printf("[%s:SUCCESS]\n", cmd);
 			getIP();
