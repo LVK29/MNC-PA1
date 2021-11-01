@@ -91,7 +91,7 @@ void clientListener(char **argv)
 		else if (strstr(key, "PORT"))
 		{
 			int port = *argv[1];
-			printf("[%s:SUCCESS]\nPORT:%d\n[%s:END]\n",key,port,cmd);
+			//printf("[%s:SUCCESS]\nPORT:%d\n[%s:END]\n",key,port,cmd);
 			printf("[%s:SUCCESS]\n",cmd);
 			printf("PORT:%d\n", port);
 			printf("[%s:END]\n", cmd);
