@@ -33,9 +33,85 @@
 #define MSG_SIZE 256
 #define BUFFER_SIZE 256
 #define CMD_SIZE 100
+int logged_in = 0;
+int server;
 int connect_to_host_old(char *server_ip, char *server_port);
 int connect_to_host(char *server_ip, int server_port);
+void clientListener(char **argv);
 
+void getIP(){
+    char hostbuffer[256]; 
+    char *IPbuffer; 
+    struct hostent *host_entry; 
+    int hostname; 
+  
+    // To retrieve hostname 
+    hostname = gethostname(hostbuffer, sizeof(hostbuffer)); 
+    
+    // To retrieve host information 
+    host_entry = gethostbyname(hostbuffer); 
+     // To convert an Internet network 
+    // address into ASCII string 
+    IPbuffer = inet_ntoa(*((struct in_addr*) 
+                           host_entry->h_addr_list[0])); 
+  
+    printf("Hostname: %s\n", hostbuffer); 
+    printf("Host IP: %s\n", IPbuffer); 
+}
+void clientListener(char **argv)
+{
+	while (!logged_in)
+	{
+		char *firstWord,*context;
+		char *cmd = (char *)malloc(sizeof(char) * CMD_SIZE);
+
+		memset(cmd, '\0', CMD_SIZE);
+		if (fgets(cmd, CMD_SIZE - 1, stdin) == NULL)
+			exit(-1);
+		char *key = strtok(cmd, " ");
+		//printf("KEY is %s\n", key);
+		//printf("strcmp is %d	",strcmp(key, "AUTHOR"));
+		if (strstr(key, "LOGIN"))
+		{
+			//printf("Logged in first and second attribute are %s %s \n",argv[1], argv[2]);
+			server = connect_to_host_old(argv[1], argv[2]);
+			// check if login fails then dont swtich loggedin to 1
+			logged_in = 1;
+		//	printf("LOGGED IN : %d\n", logged_in);
+		}
+		else if (strstr(key, "AUTHOR"))
+		{
+			char your_ubit_name[] = "dunjiong";
+			printf("I, %s, have read and understood the course academic integrity policy.\n", your_ubit_name);
+		}
+
+		else if (strstr(key, "PORT"))
+		{
+			int port = *argv[1];
+			printf("[%s:SUCCESS]\n", cmd);
+			printf("PORT:%d\n", port);
+			printf("[%s:END]\n", cmd);
+		}
+
+		else if (strstr(key, "IP"))
+		{
+			printf("[%s:SUCCESS]\n", cmd);
+			getIP();
+			printf("[%s:END]\n", cmd);
+		}
+		else if (strstr(key, "EXIT"))
+		{
+			printf("[%s:SUCCESS]\n", cmd);
+			exit(1);
+			printf("[%s:END]\n", cmd);
+		}
+	}
+	// if(lOGGEDin){
+	// 	int server;
+	// erver = connect_to_host(argv[1], atoi(argv[2]));
+	// logged_in=1
+	// }
+}
 /**
 * main function
 *
@@ -50,26 +126,10 @@ int main(int argc, char **argv)
 		printf("Usage:%s [ip] [port]\n", argv[0]);
 		exit(-1);
 	}
-	int logged_in = 0;
-	// INFINATE LOOP UNTILL CLIENT LOGS IN
-	// while (!logged_in)
-	// {
-	// 	char *cmd = (char *)malloc(sizeof(char) * CMD_SIZE);
 
-	// 	memset(cmd, '\0', CMD_SIZE);
-	// 	if (fgets(cmd, CMD_SIZE - 1, stdin) == NULL) //Mind the newline character that will be written to cmd
-	// 		exit(-1);
-	// 	strtok(cmd, "\n");
-	// 	printf("\n %s \n",cmd);
+	//INFINATE LOOP UNTILL CLIENT LOGS IN while (!logged_in)
+	clientListener(argv);
 
-	// 	// if(lOGGEDin){
-	// 	// 	int server;
-	// 	// erver = connect_to_host(argv[1], atoi(argv[2]));
-	// 	// logged_in=1
-	// 	// }
-	// }
-	int server;
-	server = connect_to_host_old(argv[1], argv[2]);
 	//server = connect_to_host(argv[1], atoi(argv[2]));
 
 	while (TRUE)
@@ -81,7 +141,7 @@ int main(int argc, char **argv)
 		memset(msg, '\0', MSG_SIZE);
 		if (fgets(msg, MSG_SIZE - 1, stdin) == NULL) //Mind the newline character that will be written to msg
 			exit(-1);
-
+		strtok(msg, "\n");
 		printf("I got: %s(size:%d chars)", msg, strlen(msg));
 
 		printf("\nSENDing it to the remote server ... ");
@@ -98,7 +158,16 @@ int main(int argc, char **argv)
 			printf("Server responded: %s", buffer);
 			fflush(stdout);
 		}
+		if (strcmp(msg, "LOGOUT") == 0)
+		{
+			printf("logged out?");
+			server = connect_to_host_old(argv[1], argv[2]);
+			logged_in = 0;
+			printf(" LOGGED OUT : .\n", logged_in);
+			clientListener(argv);
+		}
 	}
+		
 }
 
 int connect_to_host_old(char *server_ip, char *server_port)
