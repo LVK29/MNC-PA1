@@ -69,23 +69,23 @@ void clientListener(char **argv)
 		if (fgets(cmd, CMD_SIZE - 1, stdin) == NULL)
 			exit(-1);
 		char *key = strtok(cmd, " ");
-		printf("\n%s\n", key);
-		
-		if (strcmp(key, "LOGIN") == 0)
+		//printf("KEY is %s\n", key);
+		//printf("strcmp is %d	",strcmp(key, "AUTHOR"));
+		if (strstr(key, "LOGIN"))
 		{
-			printf("logged in first and second attribute are %s %s \n",argv[1], argv[2]);
+			//printf("Logged in first and second attribute are %s %s \n",argv[1], argv[2]);
 			server = connect_to_host_old(argv[1], argv[2]);
 			// check if login fails then dont swtich loggedin to 1
 			logged_in = 1;
-			printf(" LOGGED IN : .\n", logged_in);
+		//	printf("LOGGED IN : %d\n", logged_in);
 		}
-		if (strcmp(key, "AUTHOR") == 0)
+		else if (strstr(key, "AUTHOR"))
 		{
 			char your_ubit_name[] = "dunjiong";
 			printf("I, %s, have read and understood the course academic integrity policy.\n", your_ubit_name);
 		}
 
-		if (strcmp(key, "PORT") == 0)
+		else if (strstr(key, "PORT"))
 		{
 			int port = *argv[1];
 			printf("[%s:SUCCESS]\n", cmd);
@@ -93,10 +93,16 @@ void clientListener(char **argv)
 			printf("[%s:END]\n", cmd);
 		}
 
-		if (strcmp(key, "IP") == 0)
+		else if (strstr(key, "IP"))
 		{
 			printf("[%s:SUCCESS]\n", cmd);
 			getIP();
+			printf("[%s:END]\n", cmd);
+		}
+		else if (strstr(key, "EXIT"))
+		{
+			printf("[%s:SUCCESS]\n", cmd);
+			exit(1);
 			printf("[%s:END]\n", cmd);
 		}
 	}
@@ -152,8 +158,6 @@ int main(int argc, char **argv)
 			printf("Server responded: %s", buffer);
 			fflush(stdout);
 		}
-		printf("%s",msg);
-		printf("llb? %d" ,strcmp(msg, "LOGOUT") );
 		if (strcmp(msg, "LOGOUT") == 0)
 		{
 			printf("logged out?");
