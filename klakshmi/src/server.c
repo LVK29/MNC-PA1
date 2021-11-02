@@ -37,26 +37,27 @@
 #define TRUE 1
 #define CMD_SIZE 100
 #define BUFFER_SIZE 256
-int CONNECTED_CLIENTS=0;
+int CONNECTED_CLIENTS = 0;
 
-void getIP(){
-    char hostbuffer[256]; 
-    char *IPbuffer; 
-    struct hostent *host_entry; 
-    int hostname; 
-  
-    // To retrieve hostname 
-    hostname = gethostname(hostbuffer, sizeof(hostbuffer)); 
-    
-    // To retrieve host information 
-    host_entry = gethostbyname(hostbuffer); 
-     // To convert an Internet network 
-    // address into ASCII string 
-    IPbuffer = inet_ntoa(*((struct in_addr*) 
-                           host_entry->h_addr_list[0])); 
-  
-    printf("Hostname: %s\n", hostbuffer); 
-    printf("Host IP: %s\n", IPbuffer); 
+void getIP()
+{
+	char hostbuffer[256];
+	char *IPbuffer;
+	struct hostent *host_entry;
+	int hostname;
+
+	// To retrieve hostname
+	hostname = gethostname(hostbuffer, sizeof(hostbuffer));
+
+	// To retrieve host information
+	host_entry = gethostbyname(hostbuffer);
+	// To convert an Internet network
+	// address into ASCII string
+	IPbuffer = inet_ntoa(*((struct in_addr *)
+							   host_entry->h_addr_list[0]));
+
+	printf("Hostname: %s\n", hostbuffer);
+	printf("Host IP: %s\n", IPbuffer);
 }
 /**
 * main function
@@ -147,7 +148,7 @@ int main(int argc, char **argv)
 						if (fgets(cmd, CMD_SIZE - 1, stdin) == NULL) //Mind the newline character that will be written to cmd
 							exit(-1);
 						strtok(cmd, "\n");
-						
+
 						if (strcmp(cmd, "AUTHOR") == 0)
 						{
 							char your_ubit_name[] = "dunjiong";
@@ -161,7 +162,7 @@ int main(int argc, char **argv)
 							printf("PORT:%d\n", port);
 							printf("[%s:END]\n", cmd);
 						}
-						
+
 						if (strcmp(cmd, "IP") == 0)
 						{
 							printf("[%s:SUCCESS]\n", cmd);
@@ -170,7 +171,6 @@ int main(int argc, char **argv)
 						}
 						if (strcmp(cmd, "LIST") == 0)
 						{
-							
 						}
 
 						printf("\nI got: %s\n", cmd);
@@ -184,12 +184,24 @@ int main(int argc, char **argv)
 					{
 						caddr_len = sizeof(client_addr);
 						fdaccept = accept(server_socket, (struct sockaddr *)&client_addr, &caddr_len);
-						if (fdaccept < 0){
+						if (fdaccept < 0)
+						{
 							perror("Accept failed.");
 						}
+
+						struct sockaddr_in addr;
+
+						socklen_t addr_size = sizeof(struct sockaddr_in);
+
+						int res = getpeername(fdaccept, (struct sockaddr *)&addr, &addr_size);
+
+						char *clientip = malloc(20);
+
+						strcpy(clientip, inet_ntoa(addr.sin_addr));
+
+						printf("Client port : %d client id : %s", res, clientip);
 						CONNECTED_CLIENTS++;
-						printf("%d",CONNECTED_CLIENTS);
-							
+						printf("%d", CONNECTED_CLIENTS);
 
 						printf("\nRemote Host connected!\n");
 
@@ -210,7 +222,7 @@ int main(int argc, char **argv)
 							close(sock_index);
 							printf("Remote Host terminated connection!\n");
 							CONNECTED_CLIENTS--;
-							printf("%d",CONNECTED_CLIENTS);
+							printf("%d", CONNECTED_CLIENTS);
 							/* Remove from watched list */
 							FD_CLR(sock_index, &master_list);
 						}
