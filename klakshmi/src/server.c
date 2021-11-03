@@ -188,7 +188,7 @@ int main(int argc, char **argv)
 						{
 							perror("Accept failed.");
 						}
-
+						//lvk
 						struct sockaddr_in addr;
 
 						socklen_t addr_size = sizeof(struct sockaddr_in);
@@ -199,7 +199,9 @@ int main(int argc, char **argv)
 
 						strcpy(clientip, inet_ntoa(addr.sin_addr));
 
-						printf("Client port : %d client id : %s", res, clientip);
+						printf("Client port : %d client id : %s", ntohs(addr.sin_port), clientip);
+
+						// lvk ends
 						CONNECTED_CLIENTS++;
 						printf("%d", CONNECTED_CLIENTS);
 

@@ -37,9 +37,9 @@ int logged_in = 0;
 int server;
 int connect_to_host_old(char *server_ip, char *server_port);
 int connect_to_host(char *server_ip, int server_port);
-void clientListener(char **argv);
+void clientListener();
 int sock;
-	
+
 void getIP()
 {
 	char hostbuffer[256];
@@ -60,8 +60,8 @@ void getIP()
 	printf("Hostname: %s\n", hostbuffer);
 	printf("Host IP: %s\n", IPbuffer);
 }
- 
-void clientListener(char **argv)
+
+void clientListener()
 {
 	while (!logged_in)
 	{
@@ -71,30 +71,48 @@ void clientListener(char **argv)
 		memset(cmd, '\0', CMD_SIZE);
 		if (fgets(cmd, CMD_SIZE - 1, stdin) == NULL)
 			exit(-1);
-		char *key = strtok(cmd, " ");
-		printf("%s",argv);
+
 		printf("cmd is %s\n", cmd);
-		//printf("strcmp is %d	",strcmp(key, "AUTHOR"));
-		if (strstr(key, "LOGIN"))
+
+		// Returns first token
+		char *token = strtok(cmd, " ");
+		char *arg[80];
+		int argno = 0;
+		// Keep printing tokens while one of the
+		// delimiters present in str[].
+		while (token != NULL)
 		{
-			
-			printf("\nLogged in first and second attribute are %s %s \n",argv[1], argv[2]);
-			server = connect_to_host(argv[1], sock);
+			arg[argno] = malloc(100);
+			strcpy(arg[argno], token);
+			printf("%s\n", token);
+			argno++;
+			token = strtok(NULL, " ");
+		}
+
+		char *key = strtok(cmd, " ");
+		printf("cmd AFTER KEY IS %s %d\n", arg[0], strcmp(arg[0], "LOGIN"));
+
+		//printf("strcmp is %d	",strcmp(key, "AUTHOR"));
+		if (strcmp(arg[0], "LOGIN") == 0)
+		{
+
+			printf("\nLogged in first and second attribute are %s %s \n", arg[1], arg[2]);
+			server = connect_to_host(arg[1], atoi(arg[2]));
 			// check if login fails then dont swtich loggedin to 1
-			//server = connect_to_host(argv[1], atoi(argv[2]));
-	//   if(login_sucess)
-	//   {
-    //    	printf("[%s:SUCCESS]\n", argv[0]);
-	//   	logged_in=1;//no output
-    //   	printf("[%s:END]\n", argv[0]);
-    //   }
-	  
-	//   else
-	//   { //login failed
-    //    	printf("[%s:ERROR]\n", argv[0]);
-    //   	printf("[%s:END]\n", argv[0]);
-    //   }
-			logged_in = 1;
+			//server = connect_to_host_old(arg[1], arg[2]);
+			if (logged_in)
+			{
+				printf("[%s:SUCCESS]\n", arg[0]);
+				logged_in = 1; //no output
+				printf("[%s:END]\n", arg[0]);
+			}
+
+			else
+			{ //login failed
+				printf("[%s:ERROR]\n", arg[0]);
+				printf("[%s:END]\n", arg[0]);
+			}
+			//logged_in = 1;
 			//	printf("LOGGED IN : %d\n", logged_in);
 		}
 		else if (strstr(key, "AUTHOR"))
@@ -108,7 +126,7 @@ void clientListener(char **argv)
 		else if (strstr(key, "PORT"))
 		{
 			//printf("[%s:SUCCESS]\nPORT:%d\n[%s:END]\n",key,port,cmd);
-			printf("[%s:SUCCESS]\n",cmd);
+			printf("[%s:SUCCESS]\n", cmd);
 			printf("PORT:%d\n", sock);
 			printf("[%s:END]\n", cmd);
 		}
@@ -141,26 +159,39 @@ void clientListener(char **argv)
 */
 int main(int argc, char **argv)
 {
-	// create a socket for 
+	// create a socket for
 	struct sockaddr_in serverAdd;
-	char message[1000] , server_reply[2000];
-	
+	char message[1000], server_reply[2000];
+
 	//Create socket
-	sock = socket(AF_INET , SOCK_STREAM , 0);
+	sock = socket(AF_INET, SOCK_STREAM, 0);
 	if (sock == -1)
 	{
 		printf("Could not create socket");
 	}
-	puts("Socket created");
+	printf("Socket created wiht port %d",sock);
+
+	// serverAdd.sin_addr.s_addr = inet_addr("127.0.1.1");
+	// serverAdd.sin_family = AF_INET;
+	// serverAdd.sin_port = htons(4321);
+
+	// //Connect to remote server
+	// if (connect(sock , (struct sockaddr *)&server , sizeof(server)) < 0)
+	// {
+	// 	perror("connect failed. Error");
+	// 	return 1;
+	// }else{
+	// 	printf("hard coded connected");
+	// }
 	
-	serverAdd.sin_addr.s_addr = inet_addr("127.0.0.1");
-	serverAdd.sin_family = AF_INET;
-	serverAdd.sin_port = htons( 8888 );
-	printf("\nSocket is %d\n",sock);
+	
+	puts("Connected\n");
+
+	printf("\nSocket is %d\n", sock);
 	//INFINATE LOOP UNTILL CLIENT LOGS IN while (!logged_in)
-	clientListener(argv);
+	clientListener();
 	printf("\n login successful");
-	server = connect_to_host(argv[1], atoi(argv[2]));
+	//server = connect_to_host(argv[1], atoi(argv[2]));
 
 	while (TRUE)
 	{
@@ -191,40 +222,45 @@ int main(int argc, char **argv)
 		if (strcmp(msg, "LOGOUT") == 0)
 		{
 			printf("logged out?");
-			server = connect_to_host_old(argv[1], argv[2]);
+			//server = connect_to_host_old(argv[1], argv[2]);
 			logged_in = 0;
 			printf(" LOGGED OUT : .\n", logged_in);
-			clientListener(argv);
+			clientListener();
 		}
 	}
-
 }
-
 
 int connect_to_host(char *server_ip, int server_port)
 {
-    int fdsocket, len;
-    struct sockaddr_in remote_server_addr;
+	int  len;
+	struct sockaddr_in remote_server_addr;
 
-    fdsocket = socket(AF_INET, SOCK_STREAM, 0);
-    if(fdsocket < 0)
-       {
-       	perror("Failed to create socket");
-       	logged_in=0;
-       }
-    bzero(&remote_server_addr, sizeof(remote_server_addr));
-    remote_server_addr.sin_family = AF_INET;
-    inet_pton(AF_INET, server_ip, &remote_server_addr.sin_addr);
-    remote_server_addr.sin_port = htons(server_port);
+	// fdsocket = socket(AF_INET, SOCK_STREAM, 0);
+	// if (fdsocket < 0)
+	// {
+	// 	perror("Failed to create socket");
+	// 	logged_in = 0;
+	// }
+	bzero(&remote_server_addr, sizeof(remote_server_addr));
+	remote_server_addr.sin_family = AF_INET;
+	inet_pton(AF_INET, server_ip, &remote_server_addr.sin_addr);
+	remote_server_addr.sin_port = htons(server_port);
+	printf("lalla");
+	if (connect(sock, (struct sockaddr *)&remote_server_addr, sizeof(remote_server_addr)) < 0)
+	{
+		printf("\n laude connectfialed!");
+		perror("Connect failed");
+		logged_in = 0;
+	}
+	else
+	{
+		logged_in = 1;
 
-    if(connect(fdsocket, (struct sockaddr*)&remote_server_addr, sizeof(remote_server_addr)) < 0)
-        {
-        	perror("Connect failed");
-        	logged_in=0;
-        }
-    return fdsocket;
+		
+	}
+
+	return sock;
 }
-
 
 int connect_to_host_old(char *server_ip, char *server_port)
 {
