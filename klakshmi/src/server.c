@@ -79,6 +79,7 @@ void printList() {
    }
 	
    printf(" ]");
+   printf("This is fking end\n");
 }
 void insertFirst(int order, char *hostname, char *ip, int port) {
    //create a link
@@ -205,7 +206,10 @@ void stat_printList() {
    while(ptr != NULL) {
         ptr->order = order_index;
         order_index++;
-      printf("(%d,%s,%d,%d,%s)\n",ptr->order,ptr->hostname,ptr->message_sent,ptr->message_received,ptr->status);
+      // printf("(%d,%s,%d,%d,%s)\n",ptr->order,ptr->hostname,ptr->message_sent,ptr->message_received,ptr->status);
+
+      printf("(%d,%s,%d,%d,%s,%s)\n",ptr->order,ptr->hostname,ptr->message_sent,ptr->message_received,ptr->status,ptr->ip);
+
       ptr = ptr->next;
    }
 	
@@ -282,10 +286,15 @@ struct stat_node *stat_add_send_message(char *key) {        //Find if ip existed
    }
 
    //navigate through list
-   while(!strcmp(current->ip, key)) {
+   while(strcmp(current->ip, key) > 0 || strcmp(current->ip,key) < 0 ) {
 	
+      printf("this is client ip = %s\n", current->ip);
+       printf("this is client key = %s\n", key);
+
       //if it is last node
       if(current->next == NULL) {
+         stat_printList();
+         printf("The key is not found\n");
          return NULL;
       } else {
          //go to next link
@@ -294,6 +303,7 @@ struct stat_node *stat_add_send_message(char *key) {        //Find if ip existed
       }
    }      
 
+   printf("I fking found current!!!\n");
     current->message_sent = current->message_sent + 1;
     stat_delete(current->ip);
     stat_insertFirst(current->order, current->hostname, current->ip, current->port, current->message_sent, current->message_received, current->status);
@@ -312,7 +322,7 @@ struct stat_node *stat_add_received_message(char *key) {        //Find if ip exi
    }
 
    //navigate through list
-   while(!strcmp(current->ip, key)) {
+   while(strcmp(current->ip, key) > 0 || strcmp(current->ip,key) < 0 ) {
 	
       //if it is last node
       if(current->next == NULL) {
@@ -342,7 +352,7 @@ struct stat_node *stat_on_status(char *key) {        //Find if ip existed
    }
 
    //navigate through list
-   while(!strcmp(current->ip, key)) {
+   while(strcmp(current->ip, key) > 0 || strcmp(current->ip,key) < 0 ) {
 	
       //if it is last node
       if(current->next == NULL) {
@@ -375,8 +385,10 @@ struct stat_node *stat_off_status(char *key) {        //Find if ip existed
    }
 
    //navigate through list
-   while(!strcmp(current->ip, key)) {
+   while(strcmp(current->ip, key) > 0 || strcmp(current->ip,key) < 0 ) {
 	
+
+      printf("I am trying to logout\n");
       //if it is last node
       if(current->next == NULL) {
          return NULL;
@@ -476,6 +488,10 @@ void getIP()
 	printf("Hostname: %s\n", hostbuffer);
 	printf("Host IP: %s\n", IPbuffer);
 }
+
+
+char globalclientip[20];
+
 /**
 * main function
 *
@@ -534,6 +550,8 @@ int main(int argc, char **argv)
 
 	head_socket = server_socket;
 
+   
+
 	while (TRUE)
 	{
 		memcpy(&watch_list, &master_list, sizeof(master_list));
@@ -588,12 +606,11 @@ int main(int argc, char **argv)
 						}
 						if (strcmp(cmd, "LIST") == 0)
 						{
-						printList();
+						   printList();
 						}
 
-						if (strcmp(cmd, "STATISTICS")){
+						if (strcmp(cmd, "STATISTICS")==0){
 							stat_printList();
-
 						}
 
 
@@ -625,7 +642,8 @@ int main(int argc, char **argv)
 
 						printf("Client port : %d client id : %s", ntohs(addr.sin_port), clientip);
 
-	
+            	   strcpy(globalclientip, clientip);
+
 						struct hostent *he;
 						struct in_addr ipv4addr;
 						struct in6_addr ipv6addr;
@@ -636,8 +654,10 @@ int main(int argc, char **argv)
 						insertFirst(4, he->h_name , clientip , ntohs(addr.sin_port));
 
 						if(stat_find(clientip) != NULL){
+                     printf("the clientip is not NULL\n");
 							stat_on_status(clientip);
 						}else{
+                     printf("This is the new ip\n");
 							stat_insertFirst(4, he->h_name , clientip , ntohs(addr.sin_port), 0, 0, "logged-in");
 						}
 					
@@ -658,26 +678,18 @@ int main(int argc, char **argv)
 					/* Read from existing clients */
 					else
 					{
+
+                  printf("My server recieved LOGOUT\n");
 						/* Initialize buffer to receieve response */
 						char *buffer = (char *)malloc(sizeof(char) * BUFFER_SIZE);
 						memset(buffer, '\0', BUFFER_SIZE);
 
 						if (recv(sock_index, buffer, BUFFER_SIZE, 0) <= 0)
 						{
-
-						struct sockaddr_in addr;
-
-						socklen_t addr_size = sizeof(struct sockaddr_in);
-
-						int res = getpeername(fdaccept, (struct sockaddr *)&addr, &addr_size);
-
-						char *clientip = malloc(20);
-
-						strcpy(clientip, inet_ntoa(addr.sin_addr));
-
 							close(sock_index);
 							printf("Remote Host terminated connection!\n");
-							stat_off_status(clientip); //turn of stat 
+      
+                     printf("this is the globalclientip: %s\n", globalclientip);
 							CONNECTED_CLIENTS--;
 							printf("%d", CONNECTED_CLIENTS);
 							/* Remove from watched list */
@@ -687,18 +699,17 @@ int main(int argc, char **argv)
 						{
 							//Process incoming data from existing clients here ...
 
-						struct sockaddr_in addr;
+							// printf("this is client ip = %d\n", clientip);
 
-						socklen_t addr_size = sizeof(struct sockaddr_in);
 
-						int res = getpeername(fdaccept, (struct sockaddr *)&addr, &addr_size);
+                     if(strcmp(buffer, "LOGOUT")==0){
+							   stat_off_status(globalclientip); //turn of stat 
+                     }else{
+                        							stat_add_send_message(globalclientip);
+                     printf("the client has send an message: %s ;", globalclientip);
 
-						char *clientip = malloc(20);
+                     }
 
-						strcpy(clientip, inet_ntoa(addr.sin_addr));
-
-							printf("this is client ip = %d\n", clientip);
-							stat_add_send_message(clientip);
 							printf("\nClient sent me: %s\n", buffer);
 							printf("ECHOing it back to the remote host ... ");
 							if (send(fdaccept, buffer, strlen(buffer), 0) == strlen(buffer))
